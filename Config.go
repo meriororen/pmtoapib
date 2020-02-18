@@ -2,6 +2,8 @@ package main
 
 import "flag"
 
+var DefaultConfig *Config
+
 type Config struct {
 	CollectionPath         string
 	DestinationPath        string
@@ -9,6 +11,7 @@ type Config struct {
 	ForceApibCreation      bool
 	ForceResponsesCreation bool
 	DumpRequest            string
+	EnvironmentPath        string
 }
 
 func (c *Config) Init() {
@@ -25,5 +28,9 @@ func (c *Config) Init() {
 
 	flag.StringVar(&c.DumpRequest, "dump-request", "", "Output the markup for a single request. (Takes a request name)")
 
+	flag.StringVar(&c.EnvironmentPath, "environment-path", "", "Path to the Postman Collection Environment File to be applied to Collection")
+
 	flag.Parse()
+
+	DefaultConfig = c
 }

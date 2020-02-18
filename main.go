@@ -12,11 +12,10 @@ import (
 )
 
 func getApibFileContent(c Collection) string {
-	tpl :=
-		`# Group {{ .Info.Name }}
+	tpl := `
+## Group {{ .Info.Name }}
 
-{{ .Info.Description }}
-
+{{ .Info.Description }} 
 {{ range .Items }}{{ if not .Request.IsExcluded }}
 {{ .Markup }}
 
@@ -34,10 +33,10 @@ func getApibFileContent(c Collection) string {
 	return s
 }
 
-func getResponseFiles(c Collection) []map[string]string {
+func getResponseFiles(items []CollectionItem) []map[string]string {
 	var files []map[string]string
 
-	for _, item := range c.Items {
+	for _, item := range items {
 		if !item.Request.IsExcluded() {
 			for _, response := range item.ResponseList() {
 				m := map[string]string{}
@@ -85,6 +84,11 @@ func main() {
 		apibFileName = config.ApibFileName
 	}
 
+	if config.EnvironmentPath != "" {
+		file, _ := ioutil.ReadFile(config.EnvironmentPath)
+		json.Unmarshal(file, &DefaultCollectionEnv)
+	}
+
 	apibFile := getApibFileContent(c)
 
 	if shouldWriteFiles(config) {
@@ -94,7 +98,7 @@ func main() {
 			config.ForceApibCreation,
 		)
 
-		for _, file := range getResponseFiles(c) {
+		for _, file := range getResponseFiles(c.Items) {
 			writeToFile(
 				fmt.Sprintf("%v/%v", filepath.Clean(config.DestinationPath), file["path"]),
 				file["body"],

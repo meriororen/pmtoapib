@@ -1,2 +1,6 @@
 /pmtoapib*
 /test
+*.json
+obb-*
+/response*
+*.apib

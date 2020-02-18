@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
-	"sort"
 	"strings"
 )
 
@@ -14,29 +14,56 @@ type CollectionItemRequest struct {
 	Description string                   `json:"description"`
 }
 
-func (r CollectionItemRequest) ShortUrl() string {
-	u, _ := url.Parse(r.Url.Raw)
-	return u.Path
+func prependHttp(str string) string {
+	if strings.Index(str, "http://") != 0 && strings.Index(str, "https://") != 0 {
+		return fmt.Sprintf("https://%v", str)
+	}
+	return str
 }
 
-func (r CollectionItemRequest) UrlParameterList() []string {
-	u, _ := url.Parse(r.Url.Raw)
+func (r CollectionItemRequest) ShortUrl() string {
+	if len(r.Url.Paths) == 0 {
+		u, _ := url.Parse(prependHttp(r.Url.Raw))
 
-	parameters := []string{}
+		return u.Path
+	} else {
+		ps := []string{""}
+		for _, p := range r.Url.Paths {
+			if p[0] == ':' {
+				p = fmt.Sprintf("{%v}", p[1:])
+			}
+			ps = append(ps, p)
+		}
 
-	m, _ := url.ParseQuery(u.RawQuery)
-
-	for key := range m {
-		parameters = append(parameters, key)
+		return strings.Join(ps, "/")
 	}
 
-	sort.Strings(parameters)
+	return ""
+}
 
-	return parameters
+func (r CollectionItemRequest) UrlParameterList() []UrlParameter {
+	if len(r.Url.Paths) == 0 {
+		u, _ := url.Parse(prependHttp(r.Url.Raw))
+		m, _ := url.ParseQuery(u.RawQuery)
+
+		queries := []UrlParameter{}
+		for k, v := range m {
+			queries = append(queries, UrlParameter{Key: k, Value: v[0]})
+		}
+
+		return queries
+	} else {
+		return append(r.Url.Queries, r.Url.Variables...)
+	}
 }
 
 func (r CollectionItemRequest) UrlParameterListString() string {
-	return strings.Join(r.UrlParameterList(), ",")
+	ps := []string{}
+	for _, p := range r.UrlParameterList() {
+		ps = append(ps, p.Key)
+	}
+
+	return strings.Join(ps, ",")
 }
 
 func (r CollectionItemRequest) IsExcluded() bool {
