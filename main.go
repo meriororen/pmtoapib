@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,14 +14,13 @@ import (
 
 func getApibFileContent(c Collection) string {
 	tpl := `
-## Group {{ .Info.Name }}
+# Group {{ .Info.Name }}
 
 {{ .Info.Description }} 
-{{ range .Items }}{{ if not .Request.IsExcluded }}
-{{ .Markup }}
-
-
-{{ end }}{{ end }}
+ 
+{{ range .Items }}
+	{{ .Markup }}
+{{ end }}
 `
 
 	t := template.New("Template")
@@ -37,13 +37,12 @@ func getResponseFiles(items []CollectionItem) []map[string]string {
 	var files []map[string]string
 
 	for _, item := range items {
-		if !item.Request.IsExcluded() {
-			for _, response := range item.ResponseList() {
-				m := map[string]string{}
-				m["path"] = response.BodyIncludePath(item.Request)
-				m["body"] = response.FormattedBody()
-				files = append(files, m)
-			}
+		responses := item.ResponseList()
+		for _, response := range responses {
+			m := map[string]string{}
+			m["path"] = response.BodyIncludePath(item.Request)
+			m["body"] = response.FormattedBody()
+			files = append(files, m)
 		}
 	}
 
@@ -76,7 +75,12 @@ func main() {
 
 	file, _ := ioutil.ReadFile(config.CollectionPath)
 	var c Collection
-	json.Unmarshal(file, &c)
+	err := json.Unmarshal(file, &c)
+	if err != nil {
+		log.Fatal("Error in unmarshaling postman collection: ", err)
+	}
+
+	log.Println(c.Items[1].Name)
 
 	apibFileName := strings.Replace(c.Info.Name, " ", "-", -1)
 

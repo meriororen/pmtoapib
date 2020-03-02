@@ -4,3 +4,6 @@
 obb-*
 /response*
 *.apib
+*.html
+*.log
+*.json.bak

@@ -20,22 +20,21 @@ type CollectionItem struct {
 
 func applyEnvVars(url string) string {
 	if DefaultCollectionEnv.Name == "" {
-		//log.Println("No Env")
 		return url
 	}
 
 	str := url
 	for _, e := range DefaultCollectionEnv.Values {
 		if e.Enabled {
-			str = strings.Replace(str,
-				fmt.Sprintf("{{%v}}", e.Key), e.Value, -1)
-			//	log.Println("applying => ", url, str)
+			str = strings.Replace(str, fmt.Sprintf("{{%v}}", e.Key), e.Value, -1)
 		}
 	}
 	return str
 }
 
 func (i CollectionItem) Markup() template.HTML {
+	log.Println("--> ", i.Name)
+
 	tpl := `
 {{ $length := len .Items }} {{ if eq $length 0 }}
 ### {{ .Name }} [{{ .Request.Method }} {{ .Request.ShortUrl }}{{ if .Request.UrlParameterListString }}{?{{ .Request.UrlParameterListString }}}{{ end }}]
@@ -58,6 +57,7 @@ func (i CollectionItem) Markup() template.HTML {
     {{ end }}
 {{ .ResponseSectionMarkup }}
 {{ else }}
+## {{ .Name }} [/folder-{{ .Name }}]
 {{ range .Items }} 
 	{{ .Markup }}
 {{ end }}
@@ -67,21 +67,27 @@ func (i CollectionItem) Markup() template.HTML {
 	i.Request.Url.Raw = applyEnvVars(i.Request.Url.Raw)
 
 	if len(i.Items) > 0 {
-		// This current item is probably a folder
-		// Rename nested items with current folder name prepended
-		for idx, item := range i.Items {
-			i.Items[idx].Name = fmt.Sprint(i.Name, " > ", item.Name)
+		// in each item, find all request, and apply env
+		for k, item := range i.Items {
+			i.Items[k].Request.Url.Raw = applyEnvVars(item.Request.Url.Raw)
 		}
 
+		rsp := getResponseFiles(i.Items)
+
 		// Create all response files for nested items
-		for _, file := range getResponseFiles(i.Items) {
-			path := applyEnvVars(file["path"])
+		for _, file := range rsp {
+			path := file["path"]
 			// in case path is a full fledge url now
 			if strings.Index(path, "://") >= 0 {
-				u, _ := url.Parse(path)
-				path = fmt.Sprintf("responses%v", u.Path)
+				u, err := url.Parse(path)
+				if err == nil {
+					path = fmt.Sprintf("responses%v", u.Path)
+				} else {
+					log.Println(err)
+				}
 			}
-			//log.Println("Applied vars for", file["path"], "to", path)
+
+			// log.Println("Applied vars for", file["path"], "to", path)
 			writeToFile(
 				fmt.Sprintf("%v/%v", filepath.Clean(DefaultConfig.DestinationPath), path),
 				file["body"],
@@ -90,8 +96,7 @@ func (i CollectionItem) Markup() template.HTML {
 		}
 	}
 
-	log.Println(i.Name, "=> ", i.Request.ShortUrl())
-
+	log.Println("parsing --> ", i.Name)
 	t := template.New("Item Template")
 	t, _ = t.Parse(tpl)
 
@@ -157,7 +162,6 @@ func (i CollectionItem) ResponseList() CollectionItemResponses {
 	}
 
 	responses = i.Responses
-
 	hasTwoHundred := false
 
 	for _, response := range responses {
