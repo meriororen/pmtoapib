@@ -59,6 +59,7 @@ docker run --rm -it -v "$PWD:/opt" phillippohlandt/pmtoapib -collection collecti
 | -force-apib | | boolean | `false` | Override existing .apib files |
 | -force-responses | | boolean | `false` | Override existing response files |
 | -dump-request | | string | | Output the markup for a single request (Takes a request name) |
+| -environment-path | | string | | Path to the Postman Environment export |
 
 
 ## Options
