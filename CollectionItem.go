@@ -32,7 +32,7 @@ func applyEnvVars(url string) string {
 	return str
 }
 
-func (i CollectionItem) Markup() template.HTML {
+func (i *CollectionItem) Markup() template.HTML {
 	log.Println("--> ", i.Name)
 
 	tpl := `
@@ -43,7 +43,7 @@ func (i CollectionItem) Markup() template.HTML {
 {{ if .Request.UrlParameterList }}
 + Parameters
 
-	{{ range .Request.UrlParameterList }}+ {{ .Key }}: {{ .BacktickedValue }} (string, required) - {{ if .Description }}{{ .Description }}{{ else }}No Description{{ end }}
+	{{ range .Request.UrlParameterList }}+ {{ .BacktickedKey }}: {{ .BacktickedValue }} (string, required) - {{ if .Description }}{{ .Description }}{{ else }}No Description{{ end }}
     {{ end }}{{ end }}
 + Request
 

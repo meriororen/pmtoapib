@@ -80,8 +80,6 @@ func main() {
 		log.Fatal("Error in unmarshaling postman collection: ", err)
 	}
 
-	log.Println(c.Items[1].Name)
-
 	apibFileName := strings.Replace(c.Info.Name, " ", "-", -1)
 
 	if config.ApibFileName != "" {

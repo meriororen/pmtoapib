@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 )
@@ -23,7 +24,10 @@ func prependHttp(str string) string {
 
 func (r CollectionItemRequest) ShortUrl() string {
 	if len(r.Url.Paths) == 0 {
-		u, _ := url.Parse(prependHttp(r.Url.Raw))
+		u, err := url.Parse(prependHttp(r.Url.Raw))
+		if err != nil {
+			log.Fatal(r.Body, " -> ", err)
+		}
 
 		return u.Path
 	} else {

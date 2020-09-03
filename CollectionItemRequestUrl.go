@@ -26,6 +26,10 @@ func (p UrlParameter) BacktickedValue() string {
 	return fmt.Sprintf("`%v`", p.Value)
 }
 
+func (p UrlParameter) BacktickedKey() string {
+	return fmt.Sprintf("`%v`", p.Key)
+}
+
 func (u *CollectionItemRequestUrl) UnmarshalJSON(data []byte) error {
 	var raw interface{}
 	json.Unmarshal(data, &raw)
