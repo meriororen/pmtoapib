@@ -1,3 +1,5 @@
+Some additional patches added to support v2.1
+
 # Postman to Api Blueprint Converter
 
 A simple tool to convert Postman collection exports (**v2**) to Api Blueprint documentation.
